@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 25.75" name="PayrollOne">
+  <DataContextMoniker Name="/PayrollOneDataContext" />
+  <nestedChildShapes>
+    <classShape Id="03f90bca-ac4b-4999-aca3-5bb1e48a3c9a" absoluteBounds="0.5, 1, 2, 6.5784326171875">
+      <DataClassMoniker Name="/PayrollOneDataContext/P11NI" />
+      <nestedChildShapes>
+        <elementListCompartment Id="755950ad-33aa-474d-9e80-17e162b3cc8f" absoluteBounds="0.51500000000000012, 1.46, 1.9700000000000002, 6.0184326171875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="d2714c9f-6ee7-4341-8314-c2d3b0cada1a" absoluteBounds="4.875, 1, 2, 24.462465820312502">
+      <DataClassMoniker Name="/PayrollOneDataContext/Employee" />
+      <nestedChildShapes>
+        <elementListCompartment Id="bdfecbae-af3f-43da-8ecb-ee993c6252d7" absoluteBounds="4.89, 1.46, 1.9700000000000002, 23.9024658203125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="df3bc525-c11f-484d-9411-16ed0bfd4711" absoluteBounds="8.5, 0.875, 2, 9.2706526692708326">
+      <DataClassMoniker Name="/PayrollOneDataContext/P11Tax" />
+      <nestedChildShapes>
+        <elementListCompartment Id="3b0b53c9-d389-4e19-952f-59cb3f784b9b" absoluteBounds="8.515, 1.335, 1.9700000000000002, 8.7106526692708321" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="7b2da240-9e29-476b-b8d9-2b4f42657c27" absoluteBounds="6.625, 0.75, 2, 17.347312825520834">
+      <DataClassMoniker Name="/PayrollOneDataContext/Payroll" />
+      <nestedChildShapes>
+        <elementListCompartment Id="9f19f6cb-5a06-46b7-aca6-29122e5cbb4b" absoluteBounds="6.64, 1.21, 1.9700000000000002, 16.787312825520832" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="e75a9c7a-67e6-4d5d-b91b-9e0e6afc26b4" absoluteBounds="2.625, 1, 2, 8.6937483723958326">
+      <DataClassMoniker Name="/PayrollOneDataContext/PeriodPayElement" />
+      <nestedChildShapes>
+        <elementListCompartment Id="70fee1e1-c6e0-4e27-b209-3eb0a32f8ee2" absoluteBounds="2.64, 1.46, 1.9700000000000002, 8.1337483723958321" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+  </nestedChildShapes>
+</ordesignerObjectsDiagram>
