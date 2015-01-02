@@ -39,6 +39,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -47,6 +48,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EmployeeFactory.cs" />
+    <Compile Include="EmployeeProxy.cs" />
     <Compile Include="EmployerFactory\Connection.cs" />
     <Compile Include="EmployerFactory\EmployerFactory.cs" />
     <Compile Include="EmployerFactory\EmployerFactoryDb.cs" />
@@ -54,6 +57,7 @@
     <Compile Include="Exceptions\CompanyDoesNotExistException.cs" />
     <Compile Include="Exceptions\CompanyExistsException.cs" />
     <Compile Include="Exceptions\GeneralException.cs" />
+    <Compile Include="P45Data.cs" />
     <Compile Include="PayrollOne.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

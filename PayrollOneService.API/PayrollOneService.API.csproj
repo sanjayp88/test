@@ -39,11 +39,22 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Thrift.Common">
+      <HintPath>..\lib\Thrift.Common.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Company.cs" />
+    <Compile Include="Employee.cs" />
+    <Compile Include="EmployeeCompanyId.cs" />
+    <Compile Include="EmployeeValidation.cs" />
+    <Compile Include="GrossPaymentLine.cs" />
     <Compile Include="IPayrollOneService.cs" />
+    <Compile Include="NetPaymentLine.cs" />
+    <Compile Include="PayFrequency.cs" />
     <Compile Include="Payroll.cs" />
+    <Compile Include="ProcessPayrollAggregateResult.cs" />
+    <Compile Include="ProcessPayrollResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

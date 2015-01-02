@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using log4net;
+using PayrollOneService.API;
+using PayrollOneAPI = PayrollAPI;
 
 namespace PayrollOneService
 {
-    public class PayrollOneService
+    public class PayrollOneService : IPayrollOneService
     {
         private readonly ILog _log = LogManager.GetLogger(typeof(PayrollOneService));
         private readonly IEmployerFactory _employerFactory;
@@ -28,7 +31,7 @@ namespace PayrollOneService
                     Frequency = p.Frequency
                 }).ToList();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("GetPayrolls: " + ex.Message, ex);
                 throw;
@@ -41,32 +44,28 @@ namespace PayrollOneService
             var result = new List<EmployeeValidation>();
             var employeeRecords = new List<API.Employee>();
 
-            using(var employer = _employerFactory.OpenEmployer(company))
+            using (var employer = _employerFactory.OpenEmployer(company))
             {
                 var payroll = employer.Payrolls.FirstOrDefault(x => x.Description == payrollDescription);
-                if(payroll != null)
+                if (payroll != null)
                 {
                     employeeRecords.AddRange(payroll.Employees.Where(e => employeesToValidate.Select(x => x.AgencyId).Contains(e.Tag1) ||
-                        employeesToValidate.Select(x => x.Id).Contains(e.Code)).Select(e => new EmployeeProxy(e)
-                        {
-                            Company = company,
-                            PayFrequency = (payroll.Frequency == PayrollOneAPI.PayFrequency.Month)
-                                ? PayFrequency.Monthly : PayFrequency.Weekly
-                        }).ToArray());
+                        employeesToValidate.Select(x => x.Id).Contains(e.Code)).Select(e => 
+                            EmployeeFactory.CreateEmployee(e, company, payroll.Frequency, payrollDescription)).ToArray());
                 }
             }
 
-            foreach(var employee in employeesToValidate)
+            foreach (var employee in employeesToValidate)
             {
-                Payroll.API.Employee employeeRecord = null;
+                API.Employee employeeRecord = null;
 
                 // check by agency id if we have it
-                if(!string.IsNullOrEmpty(employee.AgencyId))
+                if (!string.IsNullOrEmpty(employee.AgencyId))
                 {
                     employeeRecord = employeeRecords.FirstOrDefault(e => e.AgencyId == employee.AgencyId);
                 }
                 // check by payrollid if we have it
-                else if(!string.IsNullOrEmpty(employee.Id))
+                else if (!string.IsNullOrEmpty(employee.Id))
                 {
                     employeeRecord = employeeRecords.FirstOrDefault(e => e.Id == employee.Id);
                 }
@@ -79,7 +78,7 @@ namespace PayrollOneService
         }
 
 
-        public virtual List<EmployeeValidation> Persist(API.Company company, string payrollDescription, List<Payroll.API.Employee> employees)
+        public virtual List<EmployeeValidation> Persist(API.Company company, string payrollDescription, List<API.Employee> employees)
         {
             try
             {
@@ -159,7 +158,7 @@ namespace PayrollOneService
                             result.Add(new EmployeeValidation
                             {
                                 Candidate = employeeToPersist,
-                                Record = new EmployeeProxy(employee),
+                                Record = EmployeeFactory.CreateEmployee(employee),
                                 Valid = true,
                                 ValidationMessage = string.Empty
                             });
@@ -182,7 +181,7 @@ namespace PayrollOneService
 
                 return result.ToList();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("Persist: " + ex.Message, ex);
                 throw;
@@ -194,19 +193,19 @@ namespace PayrollOneService
             return employer.Payrolls.SelectMany(p => p.Employees).FirstOrDefault(e => e.Code == id);
         }
 
-        public virtual List<Payroll.API.Employee> GetAll(bool includeLeavers)
+        public virtual List<API.Employee> GetAll(bool includeLeavers)
         {
             try
             {
 
                 var employees = new List<API.Employee>();
 
-                foreach(var company in _employerFactory.Connections.Select(c => c.Company))
+                foreach (var company in _employerFactory.Connections.Select(c => c.Company))
                     employees.AddRange(GetAllForCompany(company, includeLeavers));
 
                 return employees;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("List: " + ex.Message, ex);
                 throw;
@@ -214,28 +213,22 @@ namespace PayrollOneService
 
         }
 
-        public virtual List<API.Employee> GetAllForCompany(Payroll.API.Company company, bool includeLeavers = false)
+        public virtual List<API.Employee> GetAllForCompany(API.Company company, bool includeLeavers = false)
         {
             try
             {
                 var employeeList = new List<API.Employee>();
-                using(var employer = _employerFactory.OpenEmployer(company))
+                using (var employer = _employerFactory.OpenEmployer(company))
                 {
-                    foreach(var payroll in employer.Payrolls)
+                    foreach (var payroll in employer.Payrolls)
                     {
-                        employeeList.AddRange(payroll.Employees.Select(e => new EmployeeProxy(e)
-                        {
-                            Company = company,
-                            PayFrequency = (payroll.Frequency == PayrollOneAPI.PayFrequency.Month)
-                                ? PayFrequency.Monthly : PayFrequency.Weekly,
-                            PayrollDescription =  payroll.Description
-                        }).ToArray());
+                        employeeList.AddRange(payroll.Employees.Select(e => EmployeeFactory.CreateEmployee(e, company, payroll.Frequency, payroll.Description)).ToArray());
                     }
                 }
 
                 return includeLeavers ? employeeList : employeeList.Where(e => !e.HasLeft).ToList();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("GetAllForCompany: " + ex.Message, ex);
                 throw;
@@ -248,24 +241,18 @@ namespace PayrollOneService
             try
             {
                 var employeeList = new List<API.Employee>();
-                using(var employer = _employerFactory.OpenEmployer(company))
+                using (var employer = _employerFactory.OpenEmployer(company))
                 {
                     var payroll = employer.Payrolls.FirstOrDefault(x => x.Description == payrollDescription);
-                    if(payroll != null)
+                    if (payroll != null)
                     {
-                        employeeList.AddRange(payroll.Employees.Select(e => new EmployeeProxy(e)
-                        {
-                            Company = company,
-                            PayFrequency = (payroll.Frequency == PayrollOneAPI.PayFrequency.Month)
-                                ? PayFrequency.Monthly : PayFrequency.Weekly,
-                            PayrollDescription = payroll.Description
-                        }).ToArray());
+                        employeeList.AddRange(payroll.Employees.Select(e => EmployeeFactory.CreateEmployee(e, company, payroll.Frequency, payrollDescription)).ToArray());
                     }
                 }
 
                 return includeLeavers ? employeeList : employeeList.Where(e => !e.HasLeft).ToList();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("GetAllForCompanyPayroll: " + ex.Message, ex);
                 throw;
@@ -277,22 +264,20 @@ namespace PayrollOneService
         {
             try
             {
-                foreach(var grouping in exceptEmployees.GroupBy(g => g.Company))
-                    using(var employer = _employerFactory.OpenEmployer(grouping.Key))
-                        foreach(var employee in employer.Payrolls.SelectMany(p => p.Employees))
+                foreach (var grouping in exceptEmployees.GroupBy(g => g.Company))
+                    using (var employer = _employerFactory.OpenEmployer(grouping.Key))
+                        foreach (var employee in employer.Payrolls.SelectMany(p => p.Employees))
                             employee.Dormant = grouping.All(i => i.EmployeeId != employee.Code);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("PlaceEmployeesOnHoldExcept: " + ex.Message, ex);
                 throw;
             }
-
         }
 
-        public virtual void ResetData(Payroll.API.Company company)
+        public virtual void ResetData(API.Company company)
         {
-
             _log.Error("ResetData not implemented");
 
             // throw new NotImplementedException();
@@ -309,7 +294,7 @@ namespace PayrollOneService
 
             var grossPaymentsList = grossPaymentLines.ToList();
 
-            using(var employer = _employerFactory.OpenEmployer(company))
+            using (var employer = _employerFactory.OpenEmployer(company))
             {
                 try
                 {
@@ -321,7 +306,7 @@ namespace PayrollOneService
                     var addPaymentResult = AddEmployeePayments(employer, payroll, grossPaymentsList, result.Results);
                     _log.DebugFormat("Created payments for {0} employees in {1} ms (batch {2})", grossPaymentsList.Count(), stopWatch.ElapsedMilliseconds, 1);
 
-                    if(!addPaymentResult.Item1)
+                    if (!addPaymentResult.Item1)
                     {
                         result.Success = false;
                         result.FailureMessage = addPaymentResult.Item2;
@@ -331,17 +316,17 @@ namespace PayrollOneService
                     stopWatch = new Stopwatch();
                     stopWatch.Start();
 
-                    if(grossPaymentsList.Count() > 250)
+                    if (grossPaymentsList.Count() > 250)
                         payroll.Calculate();
                     else
-                        foreach(var employee in grossPaymentsList.Select(i => FindEmployee(employer, i.EmployeeCompanyId.EmployeeId)))
+                        foreach (var employee in grossPaymentsList.Select(i => FindEmployee(employer, i.EmployeeCompanyId.EmployeeId)))
                             payroll.CalculateEmployee(employee);
 
                     _log.DebugFormat("Calculated payroll for {0} employees in {1} ms (batch {2})", grossPaymentsList.Count(), stopWatch.ElapsedMilliseconds, 1);
 
                     result.Results.AddRange(GetCalculatedData(company, grossPaymentsList, returnNetPaymentData, payroll, grossPaymentsList.Count));
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     var explanation = PayrollOneAPI.Helper.GetExplanation(ex).ToString();
 
@@ -356,9 +341,9 @@ namespace PayrollOneService
             return result;
         }
 
-        private IEnumerable<ProcessPayrollResult> GetCalculatedData(Company company, IEnumerable<GrossPaymentLine> grossPaymentLines, bool returnNetPaymentData, PayrollOneAPI.Payroll payroll, int lineCount)
+        private IEnumerable<ProcessPayrollResult> GetCalculatedData(API.Company company, IEnumerable<GrossPaymentLine> grossPaymentLines, bool returnNetPaymentData, PayrollOneAPI.Payroll payroll, int lineCount)
         {
-            var context = new PayrollOneClassesDataContext(_employerFactory.SqlConnectionString(company));
+            var context = new PayrollOneDataContext(_employerFactory.SqlConnectionString(company));
 
             var periodPayElements = context.PeriodPayElements.Where(e =>
                 e.Frequency == Enum.GetName(typeof(PayrollAPI.PayFrequency), payroll.Frequency) &&
@@ -383,7 +368,7 @@ namespace PayrollOneService
                 P6Received = e.P6Received
             });
 
-            if(returnNetPaymentData)
+            if (returnNetPaymentData)
             {
                 var stopWatch = new Stopwatch();
                 stopWatch.Start();
@@ -444,7 +429,7 @@ namespace PayrollOneService
                 netPaymentLine.TaxableGrossTD = Convert.ToDouble(p11TaxForYear.Sum(t => t.TaxablePay) + p45PayTD);
                 netPaymentLine.TaxTD = Convert.ToDouble(p11TaxForYear.Sum(t => t.Tax) + p45TaxTD);
 
-                if(p11Tax == null)
+                if (p11Tax == null)
                 {
                     var employee = payroll.Employees.Single(e => e.ID == grossPaymentLine.Item1);
                     netPaymentLine.TaxCode = employee.TaxCode;
@@ -458,13 +443,13 @@ namespace PayrollOneService
                 }
 
 
-                if(payElements.Any(e => e.Variation == "LOAN"))
+                if (payElements.Any(e => e.Variation == "LOAN"))
                     netPaymentLine.SLRPaymentCurrent =
                         payElements.Where(p => p.Variation == "LOAN").Sum(e => e.NetPay.GetValueOrDefault());
 
                 return new ProcessPayrollResult { Success = true, EmployeePayrollId = grossPaymentLine.Item2.EmployeeCompanyId.EmployeeId, NetPaymentLine = netPaymentLine }; ;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new ProcessPayrollResult { Success = false, FailureMessage = PayrollOneAPI.Helper.GetExplanation(ex).ToString(), EmployeePayrollId = grossPaymentLine.Item2.EmployeeCompanyId.EmployeeId };
             }
@@ -476,7 +461,7 @@ namespace PayrollOneService
             {
                 var str = new StringBuilder("Employee Code\tBASIC:Pay\tNONTAX:Pay\n");
 
-                foreach(var line in grossPaymentLines)
+                foreach (var line in grossPaymentLines)
                 {
                     str.Append(String.Format("{0}\t{1}\t{2}\n", new[]
                     {
@@ -487,7 +472,7 @@ namespace PayrollOneService
                 }
 
                 employer.GetPendingMessages();
-                if(!payroll.StreamTimesheets(str.ToString()))
+                if (!payroll.StreamTimesheets(str.ToString()))
                 {
                     return new Tuple<bool, string>(false,
                         employer.GetPendingMessages().Aggregate(string.Empty, (s, item) => s + "\r\n" + item.Text));
@@ -495,7 +480,7 @@ namespace PayrollOneService
 
                 return new Tuple<bool, string>(true, string.Empty);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new Tuple<bool, string>(false, PayrollOneAPI.Helper.GetExplanation(ex).ToString());
             }
@@ -505,12 +490,12 @@ namespace PayrollOneService
         {
             try
             {
-                foreach(var result in _employerFactory.Connections.Select(c => c.Company).Select(TestConnection).Where(result => result != "OK"))
+                foreach (var result in _employerFactory.Connections.Select(c => c.Company).Select(TestConnection).Where(result => result != "OK"))
                     return result;
 
                 return "OK";
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("TestConnection: " + ex.Message, ex);
                 throw;
@@ -518,16 +503,16 @@ namespace PayrollOneService
 
         }
 
-        public string TestConnection(Payroll.API.Company company)
+        private string TestConnection(API.Company company)
         {
             try
             {
-                using(var employer = _employerFactory.OpenEmployer(company))
+                using (var employer = _employerFactory.OpenEmployer(company))
                 {
                     var payroll = employer.Payrolls[0];
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error(ex.Message, ex);
                 return ex.Message;
@@ -542,7 +527,7 @@ namespace PayrollOneService
             {
                 _employerFactory.CreateCompany(company);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("CreateCompany: " + ex.Message, ex);
                 throw;
@@ -556,7 +541,7 @@ namespace PayrollOneService
             {
                 _employerFactory.DeleteCompany(companyName);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("DeleteCompany: " + ex.Message, ex);
                 throw;
@@ -570,7 +555,7 @@ namespace PayrollOneService
             {
                 return _employerFactory.GetCompanies();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _log.Error("GetCompanies: " + ex.Message, ex);
                 throw;
@@ -578,32 +563,17 @@ namespace PayrollOneService
 
         }
 
-        public void Ping()
-        {
-            try
-            {
-                return;
-            }
-            catch(Exception ex)
-            {
-                _log.Error("Ping: " + ex.Message, ex);
-                throw;
-            }
-        }
-
-        public void Dispose()
-        { }
-
         public static IEnumerable<IEnumerable<T>> ToChunks<T>(IEnumerable<T> enumerable, int chunkSize)
         {
             var itemsReturned = 0;
             var list = enumerable.ToList(); // Prevent multiple execution of IEnumerable.
             var count = list.Count;
-            while(itemsReturned < count)
+            while (itemsReturned < count)
             {
                 var currentChunkSize = Math.Min(chunkSize, count - itemsReturned);
                 yield return list.GetRange(itemsReturned, currentChunkSize);
                 itemsReturned += currentChunkSize;
             }
         }
+    }
 }
