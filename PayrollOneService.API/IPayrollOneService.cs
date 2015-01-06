@@ -35,5 +35,11 @@ namespace PayrollOneService.API
 
         [OperationContract]
         List<Company> GetCompanies();
+
+        [OperationContract]
+        void CreateCompany(Company company);
+
+        [OperationContract]
+        void ResetData(Company company);
     }
 }
