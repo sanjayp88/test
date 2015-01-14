@@ -8,21 +8,21 @@ namespace PayrollOneService.API
     public class Employee
     {
         
-       [DataMember]
+      // [DataMember]
         public DateTime StartDate
         {
             get { return StartDate_ISO8601.ISO8601ToUtc(); }
             set { StartDate_ISO8601 = value.Date.ToISO8601(); }
         }
 
-        [DataMember]
+       // [DataMember]
         public DateTime DOB
         {
             get { return DOB_ISO8601.ISO8601ToUtc(); }
             set { DOB_ISO8601 = value.Date.ToISO8601(); }
         }
 
-        [DataMember]
+       // [DataMember]
         public DateTime? LeavingDate
         {
             get
@@ -43,13 +43,13 @@ namespace PayrollOneService.API
             }
         }
 
-        [DataMember]
+       // [DataMember]
         public bool HasLeft
         {
             get { return (LeavingDate.HasValue && LeavingDate.Value < DateTime.Now.Date); }
         }
 
-        [DataMember]
+       // [DataMember]
         public bool QueryAccountDetails
         {
             get
@@ -61,7 +61,7 @@ namespace PayrollOneService.API
             }
         }
 
-        [DataMember]
+        //[DataMember]
         public string DisplayName
         {
             get { return string.Format("{0}, {1}", Surname.Trim(), FirstName.Trim()); }

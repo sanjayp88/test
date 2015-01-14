@@ -128,7 +128,7 @@ namespace PayrollOneWCFService
                 throw new FaultException("GetAllForCompany: " + ex.Message);
             }
         }
-
+       
         public List<Employee> GetAllForCompanyPayroll(Company company, string payrollDescription,
             bool includeLeavers = false)
         {
@@ -189,6 +189,30 @@ namespace PayrollOneWCFService
             catch (Exception ex)
             {
                 throw new FaultException("GetCompanies: " + ex.Message);
+            }
+        }
+
+        public void CreateCompany(Company company)
+        {
+            try
+            {
+                 _service.CreateCompany(company);
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException("CreateCompany: " + ex.Message);
+            }
+        }
+
+        public void ResetData(Company company)
+        {
+            try
+            {
+                _service.ResetData(company);
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException("ResetData: " + ex.Message);
             }
         }
     }
